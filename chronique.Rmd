@@ -27,26 +27,40 @@ Grâce à l'INSEE, on peut savoir pas mal de choses sur qui est en couple ou pas
 
 Ainsi, grâce au recensement, on peut constater que les chances d'être en couple ne sont pas les mêmes. Dans le 1er arrondissement de Marseille, seuls 41 % des adultes entre 18 et 75 ans sont en couple. Mais dans [(l'ancien)](http://www.insee.fr/fr/methodes/nomenclatures/cog/cog.asp?nivgeo=ct&codgeo=1325) canton de Pélissanne, ce taux monte à 73,8 % ! Et chez vous, qu'en est-il ?
 
-```{r load_data}
+<center>
+```{r}
 load("./data/couples_communes.Rdata")
 
+inputPanel(
+  selectInput("choix", label = "Choississez une (ou des) communes", selected = "", choices = couples_communes13$Nom, multiple = TRUE, selectize = TRUE)
+)
 
+invisible(
+  reactive({
+  
+  if (!is.null(input$choix))
+    choix <- input$choix
+  else
+    choix <- NULL
+  couples_communes13 %>%
+    ggvis(x = ~Nom, y = ~p, key := ~CodeInsee) %>%
+    filter(Nom %in% c(choix, "Marseille", "Bouches-du-Rhône", "PACA", "France")) %>%
+    mutate(Nom = factor(Nom, levels = unique(Nom))) %>%
+    layer_bars(width = 0.7, fill := "#2C596F", stroke := "#2C596F") %>%
+    add_tooltip(function(x) {
+      if (is.null(x)) return(NULL)
+      row <- couples_communes13[couples_communes13$CodeInsee == x$CodeInsee, ]
+      paste0(format(row$p, digits = 2, nsmall = 1), " % des 18-75 ans sont en couple. ", collapse = "<br />")
+    }) %>%
+    add_axis("y", title = "% en couple") %>%
+    add_axis("x", title = "")
+}) %>% bind_shiny("foo")
+)
 
-couples_communes13 %>%
-  ggvis(x = ~Nom, y = ~p, key := ~CodeInsee) %>%
-  filter(Nom %in% c(eval(input_select(label = "Choississez une (ou des) communes", selected = "MARSEILLE--6E--ARRONDISSEMENT", choices = couples_communes13$Nom, multiple = TRUE, selectize = TRUE)), "Marseille", "Bouches-du-Rhône", "PACA", "France")) %>%
-  mutate(Nom = factor(Nom, levels = unique(Nom))) %>%
-  layer_bars(width = 0.7, fill := "#2C596F", stroke := "#2C596F") %>%
-  add_tooltip(function(x) {
-    if (is.null(x)) return(NULL)
-    row <- couples_communes13[couples_communes13$CodeInsee == x$CodeInsee, ]
-    paste0(format(row$p, digits = 2, nsmall = 1), " % des 18-74 ans sont en couple. ", collapse = "<br />")
-  }) %>%
-  add_axis("y", title = "% en couple") %>%
-  add_axis("x", title = "") 
-
+ggvisOutput("foo")
 
 ```
+</center>
 
 Ami lecteur, amie lectrice, si vous êtes célibataire, ne déménagez pas tout de suite à Pélissanne ou la Barben. Car ces différences géographiques tiennent pour une très large part à la composition de la population qui diffère d'une commune à l'autre. Car être en couple ou non obéit à certaines régularités sociales très fortes : le sexe, l'âge, la catégorie socioprofessionnelle... 
 
@@ -54,6 +68,7 @@ Ainsi dans les Bouches-du-Rhône les hommes sont un peu plus souvent en couple (
 
 Mais la probabilité d'être en couple varie surtout beaucoup en fonction du cycle de vie - l'âge, quoi. On voit ci-dessous que dans les Bouches-du-Rhône, la phase de mise en couple s'étend jusqu'à 36 ans. Au-delà, en particulier à partir de 40 ans, la proportion d'individus en couple se tasse en dessous de 70 %, puis décline à partir de 65 ans - pas tant parce que la retraite est l'occasion de quitter madame ou monsieur, mais parce parfois le compagnon ou (moins souvent) la compagne meurt... (oui je sais, ma spécialité c'est l'optimisme et la joie).
 
+<center>
 ```{r age, fig.cap="Proportion d'individus en couple en fonction de l'âge dans les Bocuhes-du-Rhône. Source : RP 2012/INSEE."}
 load("./data/couple_age.Rdata")
 
@@ -71,17 +86,31 @@ couple_age %>%
   add_axis("x", title = "Âge") 
 
 ```
-
+</center>
 
 Toutefois pour avoir une vision plus complète des choses il faut prendre en compte un troisième facteur : la catégorie socioprofessionnelle (CSP). Mes excuses à ceux qui détestent Bourdieu, mais oui, la position sociale influe jusque sur le couple. Et pour tout bien appréhender, il faut même s'intéresser aux interactions complexes entre âge, genre et CSP. La preuve en images, mesdames et messieurs. 
 
+<center>
 ```{r csp}
 load("./data/couples_csp.Rdata")
 
-couples_csp %>%
+
+inputPanel(
+  selectInput("choix2", label = "Choississez une CSP", selected = "Employés de la fonction publique", choices = couples_csp$CS2, multiple = FALSE, selectize = TRUE)
+)
+
+
+invisible(
+  reactive({
+  if (!is.null(input$choix2))
+    choix <- input$choix2
+  else
+    choix <- NULL
+
+  couples_csp %>%
 #  group_by(Sexe) %>%
   ggvis(x = ~agerev, y = ~p, key := ~id) %>%
-  filter(CS2 %in% eval(input_select(label = "Choississez une CSP", selected = "Professions intermédiaires de l'enseignement, de la santé, de la fonction publique et assimilés", choices = couples_csp$CS2, multiple = FALSE, selectize = TRUE))) %>%
+  filter(CS2 %in% choix) %>%
   layer_points(stroke = ~Sexe, fill = ~Sexe) %>%
 add_tooltip(function(x) {
   if (is.null(x)) return(NULL)
@@ -93,8 +122,13 @@ add_tooltip(function(x) {
   add_axis("x", title = "Âge", values = seq(20, 75, 5)) %>%
   scale_numeric("x", domain = c(18, 75)) %>%
   scale_numeric("y", domain = c(0, 100))
+}) %>% bind_shiny("foo2")
+)
+
+ggvisOutput("foo2")
 
 ```
+</center>
 
 Les chances d'être en couple à un âge donné sont très inégales selon la CSP, mais tout cela interagit : la différence entre hommes et femmes est plus ou moins grande selon les CSP, et surtout l'évolution selon l'âge de la probabilité d'être en couple varie selon la CSP et le genre. Le capital culturel joue certes un rôle, mais le capital économique semble déterminant : parmi les professions qui sont le plus en couple, on trouve essentiellement des indépendants et des cadres, du privé puis du public... En queue de classement, à l'inverse, on trouve les chômeurs n'ayant jamais travaillé, les (hommes) inactifs (dont probablement une part non négligeable de personnes souffrant d'un handicap), les personnels des services aux particuliers (femmes et hommes de ménage, jardiniers, etc.), les employés et les ouvriers...
 
