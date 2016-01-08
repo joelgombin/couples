@@ -72,7 +72,6 @@ couple_age %>%
 
 ```
 
-# combien en couple selon votre CSP
 
 Toutefois pour avoir une vision plus complète des choses il faut prendre en compte un troisième facteur : la catégorie socioprofessionnelle (CSP). Mes excuses à ceux qui détestent Bourdieu, mais oui, la position sociale influe jusque sur le couple. Et pour tout bien appréhender, il faut même s'intéresser aux interactions complexes entre âge, genre et CSP. La preuve en images, mesdames et messieurs. 
 
@@ -106,8 +105,6 @@ Bref, vous pensiez que le couple n'était pas politique. Mais si, il l'est, et p
 Allez, bon week end sur Tinder quand même ;-)
 
 
-Note: tous les calculs ont été réalisés par Joël Gombin à partir du fichier détail du recensement 2012, pour les adultes de 18 à 75 ans résidant dans les Bouches-du-Rhône.
+*Note :* tous les calculs ont été réalisés par Joël Gombin à partir du fichier détail du recensement 2012, pour les adultes de 18 à 75 ans résidant dans les Bouches-du-Rhône.
 Le code et les données sont [librement disponibles sur github](http://www.github.com/joelgombin/couples).
 
-
-# des fortes régularités sociales
