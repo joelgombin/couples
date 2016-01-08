@@ -3,8 +3,7 @@ title:
 author: 
 date: 
 output: 
-  html_document: 
-    fig_height: 10
+  html_document
 runtime: shiny
 ---
 
