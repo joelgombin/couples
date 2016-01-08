@@ -21,10 +21,23 @@ library(ggvis)
 ```{r csp}
 load("./data/couples_csp.Rdata")
 
-couples_csp %>%
+
+inputPanel(
+  selectInput("choix", label = "Choississez une CSP", selected = "Employés de la fonction publique", choices = couples_csp$CS2, multiple = FALSE, selectize = TRUE)
+)
+
+
+invisible(
+  reactive({
+  if (!is.null(input$choix))
+    choix <- input$choix
+  else
+    choix <- NULL
+
+  couples_csp %>%
 #  group_by(Sexe) %>%
   ggvis(x = ~agerev, y = ~p, key := ~id) %>%
-  filter(CS2 %in% eval(input_select(label = "Choississez une CSP", selected = "Professions intermédiaires de l'enseignement, de la santé, de la fonction publique et assimilés", choices = couples_csp$CS2, multiple = FALSE, selectize = TRUE))) %>%
+  filter(CS2 %in% choix) %>%
   layer_points(stroke = ~Sexe, fill = ~Sexe) %>%
 add_tooltip(function(x) {
   if (is.null(x)) return(NULL)
@@ -36,6 +49,11 @@ add_tooltip(function(x) {
   add_axis("x", title = "Âge", values = seq(20, 75, 5)) %>%
   scale_numeric("x", domain = c(18, 75)) %>%
   scale_numeric("y", domain = c(0, 100))
+}) %>% bind_shiny("foo")
+)
+
+ggvisOutput("foo")
+
 
 ```
 </center>
