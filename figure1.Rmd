@@ -1,0 +1,37 @@
+---
+title: 
+author: 
+date: 
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+
+```{r packages}
+library(dplyr)
+library(ggvis)
+```
+```{r load_data}
+load("./data/couples_communes.Rdata")
+
+
+
+couples_communes13 %>%
+  ggvis(x = ~Nom, y = ~p, key := ~CodeInsee) %>%
+  filter(Nom %in% c(eval(input_select(label = "Choississez une (ou des) communes", selected = "MARSEILLE--6E--ARRONDISSEMENT", choices = couples_communes13$Nom, multiple = TRUE, selectize = TRUE)), "Marseille", "Bouches-du-Rhône", "PACA", "France")) %>%
+  mutate(Nom = factor(Nom, levels = unique(Nom))) %>%
+  layer_bars(width = 0.7, fill := "#2C596F", stroke := "#2C596F") %>%
+  add_tooltip(function(x) {
+    if (is.null(x)) return(NULL)
+    row <- couples_communes13[couples_communes13$CodeInsee == x$CodeInsee, ]
+    paste0(format(row$p, digits = 2, nsmall = 1), " % des 18-74 ans sont en couple. ", collapse = "<br />")
+  }) %>%
+  add_axis("y", title = "% en couple") %>%
+  add_axis("x", title = "") 
+
+
+```

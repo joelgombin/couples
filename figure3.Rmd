@@ -1,0 +1,37 @@
+---
+title: 
+author: 
+date: 
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+
+```{r packages}
+library(dplyr)
+library(ggvis)
+```
+```{r csp}
+load("./data/couples_csp.Rdata")
+
+couples_csp %>%
+#  group_by(Sexe) %>%
+  ggvis(x = ~agerev, y = ~p, key := ~id) %>%
+  filter(CS2 %in% eval(input_select(label = "Choississez une CSP", selected = "Professions intermédiaires de l'enseignement, de la santé, de la fonction publique et assimilés", choices = couples_csp$CS2, multiple = FALSE, selectize = TRUE))) %>%
+  layer_points(stroke = ~Sexe, fill = ~Sexe) %>%
+add_tooltip(function(x) {
+  if (is.null(x)) return(NULL)
+  row <- couples_csp[couples_csp$id == x$id, ]
+  paste0("À ", row$agerev, " ans,", format(row$p, digits = 2, nsmall = 1), " % des ", tolower(row$Sexe), " sont en couple. ", collapse = "<br />")
+}) %>%
+# layer_lines(stroke = ~Sexe) %>%
+  add_axis("y", title = "% en couple", values = seq(0, 100, 10)) %>%
+  add_axis("x", title = "Âge", values = seq(20, 75, 5)) %>%
+  scale_numeric("x", domain = c(18, 75)) %>%
+  scale_numeric("y", domain = c(0, 100))
+
+```
