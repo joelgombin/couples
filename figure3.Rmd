@@ -16,6 +16,8 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 library(dplyr)
 library(ggvis)
 ```
+
+<center>
 ```{r csp}
 load("./data/couples_csp.Rdata")
 
@@ -36,3 +38,4 @@ add_tooltip(function(x) {
   scale_numeric("y", domain = c(0, 100))
 
 ```
+</center>
