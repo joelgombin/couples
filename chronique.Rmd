@@ -1,0 +1,113 @@
+---
+title: "To be or not to be en couple"
+author: "Joël Gombin"
+date: "7 janvier 2016"
+runtime: shiny
+output: 
+ html_document:
+  fig_caption: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+
+```{r packages}
+library(dplyr)
+library(ggvis)
+```
+
+
+Toute la semaine, [j'écris sur le Front national](https://cv.archives-ouvertes.fr/joel-gombin). C'est sympa, et ça risque de continuer encore quelques temps ; mais, me direz-vous à juste titre, il n'y a pas que le FN dans la vie. En plus, c'est le week-end, que diable ! Alors, aujourd'hui, j'ai envie de vous parler d'amour. Oui, d'amouuuuuuur. Ou plutôt, de sa forme socialement instituée et routinisée : le couple.
+
+On pourrait naïvement penser que c'est intime, tout cela. Que d'être en couple ou non, ça dépend de soi, des hasards de la vie, de son orientation sexuelle, du nombre de séances de psychanalyse qu'on a faites, que sais-je encore... Tout cela est sans doute vrai, mais le couple, c'est aussi un fait social et une institution, que de savants sociologues étudient. 
+
+Grâce à l'INSEE, on peut savoir pas mal de choses sur qui est en couple ou pas. Bon, il faut accepter la définition du couple utilisée par l'auguste institut statistique : déclarer à l'agent recenseur qu'on "vit en couple" (qu'il y ait cohabitation ou non) nécessite certainement que ce couple soit déjà un peu solidifé... Mais c'est une très bonne base de discussion (Au passage, implicitement ces couples peuvent être hétérosexuels ou homosexuels. Par contre il peut y avoir un biais de déclaration, puisque on pose la question indépendamment à chaque personne : il est donc possible que l'une des parties prenantes d'une relation déclare être en couple et pas l'autre...).
+
+Ainsi, grâce au recensement, on peut constater que les chances d'être en couple ne sont pas les mêmes. Dans le 1er arrondissement de Marseille, seuls 41 % des adultes entre 18 et 75 ans sont en couple. Mais dans [(l'ancien)](http://www.insee.fr/fr/methodes/nomenclatures/cog/cog.asp?nivgeo=ct&codgeo=1325) canton de Pélissanne, ce taux monte à 73,8 % ! Et chez vous, qu'en est-il ?
+
+```{r load_data}
+load("./data/couples_communes.Rdata")
+
+
+
+couples_communes13 %>%
+  ggvis(x = ~Nom, y = ~p, key := ~CodeInsee) %>%
+  filter(Nom %in% c(eval(input_select(label = "Choississez une (ou des) communes", selected = "MARSEILLE--6E--ARRONDISSEMENT", choices = couples_communes13$Nom, multiple = TRUE, selectize = TRUE)), "Marseille", "Bouches-du-Rhône", "PACA", "France")) %>%
+  mutate(Nom = factor(Nom, levels = unique(Nom))) %>%
+  layer_bars(width = 0.7, fill := "#2C596F", stroke := "#2C596F") %>%
+  add_tooltip(function(x) {
+    if (is.null(x)) return(NULL)
+    row <- couples_communes13[couples_communes13$CodeInsee == x$CodeInsee, ]
+    paste0(format(row$p, digits = 2, nsmall = 1), " % des 18-74 ans sont en couple. ", collapse = "<br />")
+  }) %>%
+  add_axis("y", title = "% en couple") %>%
+  add_axis("x", title = "") 
+
+
+```
+
+Ami lecteur, amie lectrice, si vous êtes célibataire, ne déménagez pas tout de suite à Pélissanne ou la Barben. Car ces différences géographiques tiennent pour une très large part à la composition de la population qui diffère d'une commune à l'autre. Car être en couple ou non obéit à certaines régularités sociales très fortes : le sexe, l'âge, la catégorie socioprofessionnelle... 
+
+Ainsi dans les Bouches-du-Rhône les hommes sont un peu plus souvent en couple (61,9 %) que les femmes (58,6 %) (c'est vrai aussi, dans une moindre mesure, à l'échelle du pays). Ben oui, les inégalités genrées s'étendent jusqu'aux "chances" d'être en couple (même si oui, on est d'accord, parfois être en couple avec Bidule ou Truc tient plus du calvaire que de la chance). 
+
+Mais la probabilité d'être en couple varie surtout beaucoup en fonction du cycle de vie - l'âge, quoi. On voit ci-dessous que dans les Bouches-du-Rhône, la phase de mise en couple s'étend jusqu'à 36 ans. Au-delà, en particulier à partir de 40 ans, la proportion d'individus en couple se tasse en dessous de 70 %, puis décline à partir de 65 ans - pas tant parce que la retraite est l'occasion de quitter madame ou monsieur, mais parce parfois le compagnon ou (moins souvent) la compagne meurt... (oui je sais, ma spécialité c'est l'optimisme et la joie).
+
+```{r age, fig.cap="Proportion d'individus en couple en fonction de l'âge dans les Bocuhes-du-Rhône. Source : RP 2012/INSEE."}
+load("./data/couple_age.Rdata")
+
+couple_age %>%
+  ungroup() %>%
+  ggvis(x = ~as.integer(agerev), y = ~p, key := ~agerev) %>%
+  layer_points(opacity := 0) %>%
+  add_tooltip(function(x) {
+    if (is.null(x)) return(NULL)
+    row <- couple_age[couple_age$agerev == x$agerev, ]
+    paste0("À ", as.character(as.integer(row$agerev)), " ans,", format(row$p, digits = 2, nsmall = 1), " % des individus sont en couple. ", collapse = "<br />")
+  }) %>%
+  layer_paths(stroke := "#2C596F") %>%
+  add_axis("y", title = "% en couple") %>%
+  add_axis("x", title = "Âge") 
+
+```
+
+# combien en couple selon votre CSP
+
+Toutefois pour avoir une vision plus complète des choses il faut prendre en compte un troisième facteur : la catégorie socioprofessionnelle (CSP). Mes excuses à ceux qui détestent Bourdieu, mais oui, la position sociale influe jusque sur le couple. Et pour tout bien appréhender, il faut même s'intéresser aux interactions complexes entre âge, genre et CSP. La preuve en images, mesdames et messieurs. 
+
+```{r csp}
+load("./data/couples_csp.Rdata")
+
+couples_csp %>%
+#  group_by(Sexe) %>%
+  ggvis(x = ~agerev, y = ~p, key := ~id) %>%
+  filter(CS2 %in% eval(input_select(label = "Choississez une CSP", selected = "Professions intermédiaires de l'enseignement, de la santé, de la fonction publique et assimilés", choices = couples_csp$CS2, multiple = FALSE, selectize = TRUE))) %>%
+  layer_points(stroke = ~Sexe, fill = ~Sexe) %>%
+add_tooltip(function(x) {
+  if (is.null(x)) return(NULL)
+  row <- couples_csp[couples_csp$id == x$id, ]
+  paste0("À ", row$agerev, " ans,", format(row$p, digits = 2, nsmall = 1), " % des ", tolower(row$Sexe), " sont en couple. ", collapse = "<br />")
+}) %>%
+# layer_lines(stroke = ~Sexe) %>%
+  add_axis("y", title = "% en couple", values = seq(0, 100, 10)) %>%
+  add_axis("x", title = "Âge", values = seq(20, 75, 5)) %>%
+  scale_numeric("x", domain = c(18, 75)) %>%
+  scale_numeric("y", domain = c(0, 100))
+
+```
+
+Les chances d'être en couple à un âge donné sont très inégales selon la CSP, mais tout cela interagit : la différence entre hommes et femmes est plus ou moins grande selon les CSP, et surtout l'évolution selon l'âge de la probabilité d'être en couple varie selon la CSP et le genre. Le capital culturel joue certes un rôle, mais le capital économique semble déterminant : parmi les professions qui sont le plus en couple, on trouve essentiellement des indépendants et des cadres, du privé puis du public... En queue de classement, à l'inverse, on trouve les chômeurs n'ayant jamais travaillé, les (hommes) inactifs (dont probablement une part non négligeable de personnes souffrant d'un handicap), les personnels des services aux particuliers (femmes et hommes de ménage, jardiniers, etc.), les employés et les ouvriers...
+
+Les inégalités socioprofessionnelles, d'âge et de genre se cumulent. Ainsi, après 35 ans environ, la proportion de femmes en couple diminuent beaucoup plus vite que pour les hommes. Cela vient d'un fait simple : en moyenne, les hommes sont en couple avec des femmes plus jeunes qu'eux (pour les couples hétérosexuels, naturellement...). Du coup, plus une femme avance en âge moins il y a de "demande" pour elle sur le marché du couple. À l'inverse, un homme célibataire après, mettons, 40 ans sera dans une position très favorable - et ce, a fortiori s'il occupe une belle position socioprofessionnelle. Lorsqu'on prend en compte le fait qu'être en couple constitue un avantage économique, a fortiori pour les femmes (voir par exemple [cette étude](http://www.insee.fr/fr/themes/document.asp?reg_id=0&ref_id=COUFAM15d_D3_Niveau)), on perçoit à quel point cette situation est inégalitaire. 
+
+Bref, vous pensiez que le couple n'était pas politique. Mais si, il l'est, et pas qu'un peu...
+
+Allez, bon week end sur Tinder quand même ;-)
+
+
+Note: tous les calculs ont été réalisés par Joël Gombin à partir du fichier détail du recensement 2012, pour les adultes de 18 à 75 ans résidant dans les Bouches-du-Rhône.
+Le code et les données sont [librement disponibles sur github](http://www.github.com/joelgombin/couples).
+
+
+# des fortes régularités sociales
