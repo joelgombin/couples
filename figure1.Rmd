@@ -22,7 +22,7 @@ load("./data/couples_communes.Rdata")
 
 couples_communes13 %>%
   ggvis(x = ~Nom, y = ~p, key := ~CodeInsee) %>%
-  filter(Nom %in% c(eval(input_select(label = "Choississez une (ou des) communes", selected = "MARSEILLE--6E--ARRONDISSEMENT", choices = couples_communes13$Nom, multiple = TRUE, selectize = TRUE)), "Marseille", "Bouches-du-Rhône", "PACA", "France")) %>%
+  filter(Nom %in% c(eval(input_select(label = "Choississez une (ou des) communes", selected = "", choices = couples_communes13$Nom, multiple = TRUE, selectize = TRUE)), "Marseille", "Bouches-du-Rhône", "PACA", "France")) %>%
   mutate(Nom = factor(Nom, levels = unique(Nom))) %>%
   layer_bars(width = 0.7, fill := "#2C596F", stroke := "#2C596F") %>%
   add_tooltip(function(x) {
