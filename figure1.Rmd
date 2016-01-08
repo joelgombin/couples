@@ -10,7 +10,7 @@ runtime: shiny
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
-
+<center>
 ```{r packages}
 library(dplyr)
 library(ggvis)
@@ -35,3 +35,4 @@ couples_communes13 %>%
 
 
 ```
+</center>
